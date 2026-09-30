@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreqLens — Free Word Frequency Analyzer & Keyword Density Checker Online</title>
+<meta name="description" content="FreqLens is a free online word frequency analyzer and keyword density checker. Paste any text to get ranked word & phrase frequencies, density % with safe-density bands, bigram/trigram tables, a live bar chart and reading-level stats. No signup.">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { newsprint: '#F8F6F0', ink: '#1A1A1A', chartreuse: '#84CC16', paperline: '#E7E2D5' },
+    fontFamily: { serif: ['Georgia','"Times New Roman"','serif'], sans: ['Inter','system-ui','sans-serif'] }
+  } }
+};
+</script>
+<style>
+  body { background:#F8F6F0; color:#1A1A1A; }
+  .paper-card { background:#FFFDF7; border:1px solid #E7E2D5; box-shadow:0 1px 0 #E7E2D5, 0 8px 24px -18px rgba(26,26,26,.35); }
+  .rule-double { border-top:3px double #1A1A1A; }
+  .stamp { border:2px solid #1A1A1A; transform:rotate(-3deg); }
+  textarea { resize:vertical; }
+  .tabbtn.active { background:#1A1A1A; color:#F8F6F0; }
+  ::-webkit-scrollbar { height:8px; width:8px; } ::-webkit-scrollbar-thumb { background:#c9c2ae; border-radius:8px; }
+  @media print { .no-print { display:none !important; } }
+</style>
+</head>
+<body class="font-sans antialiased" id="top">
+
+<!-- STICKY HEADER -->
+<header class="sticky top-0 z-40 bg-newsprint/95 backdrop-blur border-b-2 border-ink">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 h-16 flex items-center justify-between">
+    <a href="#top" class="font-serif text-2xl font-bold tracking-tight">Freq<span class="text-chartreuse" style="color:#65A30D">Lens</span></a>
+    <nav class="text-sm font-semibold">
+      <a href="#top" class="px-3 py-2 hover:underline">Home</a>
+      <a href="https://fixoraa.tech" class="px-3 py-2 hover:underline">More Tools</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="mx-auto max-w-6xl px-4 sm:px-6 pt-10 pb-6">
+  <p class="text-xs tracking-[0.25em] uppercase text-neutral-500 mb-2">Text Analysis Desk · No. 25</p>
+  <h1 class="font-serif text-4xl sm:text-5xl font-bold leading-tight">Word Frequency Analyzer &amp; Keyword Density Checker</h1>
+  <p class="mt-3 max-w-2xl text-neutral-700">Paste an article, essay or blog draft and FreqLens ranks every word and phrase by frequency, scores keyword density with safe-density bands, and charts the top terms — free, unlimited, right in your browser.</p>
+  <span class="stamp inline-block mt-4 px-3 py-1 text-xs font-bold uppercase tracking-widest bg-chartreuse">Unlimited Free Usage</span>
+</section>
+
+<!-- TOP AD -->
+<div class="no-print mx-auto max-w-6xl px-4 sm:px-6 pt-4" role="complementary" aria-label="Advertisement">
+  <div class="mx-auto text-center" style="max-width:728px">
+    <span class="block text-[10px] tracking-[0.18em] uppercase text-slate-400 mb-1.5">Advertisement</span>
+    <div class="flex justify-center overflow-hidden">
+      <div class="origin-top scale-[0.44] sm:scale-100 shrink-0">
+        <script>
+          atOptions = { 'key' : '4e68ac77881c17fe128a46565d9a4e8c', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
+        </script>
+        <script src="https://www.highrevenueformat.com/4e68ac77881c17fe128a46565d9a4e8c/invoke.js"></script>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOOL -->
+<main class="mx-auto max-w-6xl px-4 sm:px-6 py-8">
+  <div class="grid gap-6 lg:grid-cols-2">
+
+    <!-- LEFT: input desk -->
+    <section class="paper-card rounded-xl p-5 sm:p-6">
+      <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+        <h2 class="font-serif text-xl font-bold">Your text</h2>
+        <div class="flex gap-2">
+          <button id="btnSample" class="text-xs font-bold px-3 py-1.5 border border-ink rounded-full hover:bg-ink hover:text-newsprint transition">Load sample</button>
+          <button id="btnClear" class="text-xs font-bold px-3 py-1.5 border border-ink rounded-full hover:bg-ink hover:text-newsprint transition">Clear</button>
+        </div>
+      </div>
+      <textarea id="inputText" rows="14" placeholder="Paste your article, essay, or blog post here… analysis updates live as you type."
+        class="w-full rounded-lg border border-paperline bg-white p-4 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-chartreuse"></textarea>
+
+      <!-- live stats strip -->
+      <div id="statsStrip" class="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4 text-center">
+        <div class="border border-paperline rounded-lg py-2 bg-newsprint"><div class="text-lg font-bold" id="stWords">0</div><div class="text-[10px] uppercase tracking-wider text-neutral-500">Words</div></div>
+        <div class="border border-paperline rounded-lg py-2 bg-newsprint"><div class="text-lg font-bold" id="stUnique">0</div><div class="text-[10px] uppercase tracking-wider text-neutral-500">Unique</div></div>
+        <div class="border border-paperline rounded-lg py-2 bg-newsprint"><div class="text-lg font-bold" id="stSent">0</div><div class="text-[10px] uppercase tracking-wider text-neutral-500">Sentences</div></div>
+        <div class="border border-paperline rounded-lg py-2 bg-newsprint"><div class="text-lg font-bold" id="stEase">–</div><div class="text-[10px] uppercase tracking-wider text-neutral-500">Read ease</div></div>
+        <div class="border border-paperline rounded-lg py-2 bg-newsprint"><div class="text-lg font-bold" id="stGrade">–</div><div class="text-[10px] uppercase tracking-wider text-neutral-500">Grade</div></div>
+        <div class="border border-paperline rounded-lg py-2 bg-newsprint"><div class="text-lg font-bold" id="stTime">–</div><div class="text-[10px] uppercase tracking-wider text-neutral-500">Read time</div></div>
+      </div>
+
+      <!-- stop-word editor -->
+      <div class="mt-6 rule-double pt-4">
+        <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+          <h3 class="font-serif text-lg font-bold">Stop-word list</h3>
+          <button id="btnResetStop" class="text-xs font-bold px-3 py-1.5 rounded-full bg-ink text-newsprint hover:opacity-80 transition">Reset to default</button>
+        </div>
+        <p class="text-xs text-neutral-500 mb-3">Common words filtered out of the frequency tables. Add or remove your own — saved in this browser.</p>
+        <div class="flex gap-2 mb-3">
+          <input id="stopInput" type="text" placeholder="add a word…" class="flex-1 min-w-0 rounded-lg border border-paperline bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-chartreuse">
+          <button id="btnAddStop" class="text-sm font-bold px-4 py-2 rounded-lg bg-chartreuse text-ink hover:brightness-95 transition">Add</button>
+        </div>
+        <div id="stopChips" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: results desk -->
+    <section class="paper-card rounded-xl p-5 sm:p-6">
+      <h2 class="font-serif text-xl font-bold mb-1">Frequency report</h2>
+      <p class="text-xs text-neutral-500 mb-4">Density = occurrences ÷ total words × 100. Bands: <span class="font-bold">Low</span> &lt;1% · <span class="font-bold">Optimal</span> 1–3% · <span class="font-bold">Stuffed</span> &gt;3%.</p>
+
+      <div class="border border-paperline rounded-lg bg-white p-3 mb-5">
+        <h3 class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">Top terms — live chart</h3>
+        <canvas id="chart" class="w-full" height="220" aria-label="Bar chart of top term frequencies"></canvas>
+        <p id="chartEmpty" class="text-sm text-neutral-400 text-center py-6">Paste text on the left to draw the chart.</p>
+      </div>
+
+      <div class="flex gap-2 mb-3" role="tablist">
+        <button class="tabbtn active text-xs font-bold px-4 py-2 rounded-full border border-ink transition" data-tab="words" role="tab">Words</button>
+        <button class="tabbtn text-xs font-bold px-4 py-2 rounded-full border border-ink transition" data-tab="bigrams" role="tab">Bigrams</button>
+        <button class="tabbtn text-xs font-bold px-4 py-2 rounded-full border border-ink transition" data-tab="trigrams" role="tab">Trigrams</button>
+      </div>
+
+      <div class="overflow-x-auto border border-paperline rounded-lg bg-white">
+        <table class="w-full text-sm">
+          <thead class="bg-ink text-newsprint text-xs uppercase tracking-wider">
+            <tr><th class="text-left px-3 py-2">#</th><th class="text-left px-3 py-2">Term</th><th class="text-right px-3 py-2">Count</th><th class="text-right px-3 py-2">Density</th><th class="text-right px-3 py-2">Band</th></tr>
+          </thead>
+          <tbody id="freqBody"><tr><td colspan="5" class="px-3 py-8 text-center text-neutral-400">No text analyzed yet.</td></tr></tbody>
+        </table>
+      </div>
+      <p class="text-[11px] text-neutral-500 mt-2">Tip: a top keyword above 3% density usually means it is repeated too often — rewrite or use synonyms.</p>
+    </section>
+  </div>
+</main>
+
+<!-- BOTTOM AD -->
+<div class="no-print mx-auto max-w-6xl px-4 sm:px-6 pb-4" role="complementary" aria-label="Advertisement">
+  <div class="mx-auto text-center" style="max-width:728px">
+    <span class="block text-[10px] tracking-[0.18em] uppercase text-slate-400 mb-1.5">Advertisement</span>
+    <div class="flex justify-center overflow-hidden">
+      <script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="464498"></script>
+    </div>
+  </div>
+</div>
+
+<!-- ARTICLE-START -->
+<article class="mx-auto max-w-3xl px-4 sm:px-6 py-10 prose-article">
+  <h2 class="font-serif text-3xl font-bold mb-4">Keyword Density &amp; Word Frequency Analysis: The Complete Guide</h2>
+
+  <p class="mb-4 text-neutral-700 leading-relaxed">Every piece of writing has a fingerprint: the pattern of words it repeats. A <strong>word frequency analyzer</strong> reads that fingerprint for you. Paste an article into the tool above and, in a fraction of a second, you see exactly which words and phrases dominate your text, how often each one appears, and what percentage of the whole each term represents. For bloggers, SEO writers, students, editors, and content marketers, that snapshot answers the two questions that matter most: <em>am I saying what I think I am saying?</em> and <em>am I repeating my target keyword the right number of times?</em></p>
+
+  <p class="mb-6 text-neutral-700 leading-relaxed">This guide explains how keyword density works, what the safe-density bands mean, why bigrams and trigrams matter, and how to use frequency data to write content that reads naturally and ranks well.</p>
+
+  <h3 class="font-serif text-2xl font-bold mt-8 mb-3">What is keyword density?</h3>
+  <p class="mb-4 text-neutral-700 leading-relaxed"><strong>Keyword density</strong> is the percentage of times a word or phrase appears in a text relative to the total number of words. The formula is simple:</p>
+  <p class="mb-4 px-4 py-3 bg-white border border-paperline rounded-lg font-mono text-sm">density&nbsp;% = (occurrences of the term ÷ total words) × 100</p>
+  <p class="mb-4 text-neutral-700 leading-relaxed">If your 1,000-word article uses the phrase "email marketing" 12 times, its density is 1.2%. A <strong>keyword density checker</strong> automates this arithmetic for every term in the document at once, so instead of counting by hand you get a ranked table: term, count, and density percentage, side by side.</p>
+  <p class="mb-6 text-neutral-700 leading-relaxed">Density is computed on the full raw word count — including the small filler words — because that is the convention search engines and classic SEO tools have used for years. It makes densities comparable across documents of different lengths.</p>
+
+  <h3 class="font-serif text-2xl font-bold mt-8 mb-3">The safe-density bands: under, optimal, stuffed</h3>
+  <p class="mb-4 text-neutral-700 leading-relaxed">Raw percentages are only useful with guidance, so FreqLens classifies every term into one of three bands:</p>
+  <ul class="mb-4 text-neutral-700 leading-relaxed list-disc pl-6 space-y-2">
+    <li><strong>Low (under 1%).</strong> The term is a minor presence in the text. That is perfectly fine for secondary topics — not every idea needs to dominate. But if your <em>primary</em> keyword sits here, search engines may not clearly understand what the page is about, and readers may not either.</li>
+    <li><strong>Optimal (1–3%).</strong> The widely cited comfort zone for a focus keyword. The term appears often enough to establish the topic clearly, but not so often that the prose feels forced. Most well-edited articles land their main keyword in this band naturally.</li>
+    <li><strong>Stuffed (over 3%).</strong> The term is repeated excessively. This is the classic signature of <strong>keyword stuffing</strong> — cramming a keyword into every other sentence in hopes of ranking higher. Modern search engines penalize this behavior, and human readers find it tedious. If your head term is stuffed, rewrite with synonyms, pronouns, and restructured sentences.</li>
+  </ul>
+  <p class="mb-6 text-neutral-700 leading-relaxed">These bands are guidance, not law. A short 150-word product blurb will show spikier densities than a 3,000-word guide, and brand names or technical terms legitimately repeat more. Use the bands as a starting point, then apply editorial judgment.</p>
+
+  <h3 class="font-serif text-2xl font-bold mt-8 mb-3">Why a frequency analyzer beats a plain word counter</h3>
+  <p class="mb-4 text-neutral-700 leading-relaxed">A <strong>word counter</strong> tells you <em>how much</em> you wrote: total words, characters, sentences. A <strong>word frequency counter</strong> tells you <em>what</em> you wrote. That distinction matters in at least four workflows:</p>
+  <ul class="mb-6 text-neutral-700 leading-relaxed list-disc pl-6 space-y-2">
+    <li><strong>SEO editing.</strong> Confirm your target keyword — and its close variants — appear in the optimal band before publishing, and catch accidental stuffing early.</li>
+    <li><strong>Competitor analysis.</strong> Paste a rival's top-ranking article and see which terms and phrases it leans on. You are not copying; you are mapping the vocabulary the topic demands.</li>
+    <li><strong>Academic writing.</strong> Spot overused crutch words ("however," "moreover," "very") and check that key terminology is used consistently rather than drifting between synonyms.</li>
+    <li><strong>Editing and proofreading.</strong> Frequency tables expose repetition your eyes glide over: the same adjective three times in one paragraph, or a phrase you lean on unconsciously.</li>
+  </ul>
+
+  <h3 class="font-serif text-2xl font-bold mt-8 mb-3">Bigrams and trigrams: phrases carry the meaning</h3>
+  <p class="mb-4 text-neutral-700 leading-relaxed">Single words only tell half the story. The phrases <strong>"keyword density"</strong> and <strong>"density keyword"</strong> contain the same words but mean different things — order and pairing matter. That is why FreqLens also reports <strong>bigrams</strong> (two-word phrases) and <strong>trigrams</strong> (three-word phrases) with their own counts and density percentages.</p>
+  <p class="mb-4 text-neutral-700 leading-relaxed">Phrase frequency is where SEO writers find the real insights. Your article might use the word "coffee" at a healthy 1.5%, while the bigram "cold brew coffee" sits at 2.8% — revealing that one specific subtopic is doing the heavy lifting. Trigrams like "best budget espresso machine" expose the long-tail phrases your draft naturally targets, which is gold for headline and subheading choices.</p>
+  <p class="mb-6 text-neutral-700 leading-relaxed">Note that the tool builds phrases from the text <em>after</em> stop-words are removed, so you see meaningful content phrases ("email marketing software") rather than noise ("of the and").</p>
+
+  <h3 class="font-serif text-2xl font-bold mt-8 mb-3">Stop words: filtering the noise</h3>
+  <p class="mb-4 text-neutral-700 leading-relaxed"><strong>Stop words</strong> are the grammatical glue of a language — <em>the, and, of, to, in, is</em> — words so common they carry almost no topical meaning. Any honest frequency table must filter them, or the top ten results of every analysis would be identical and useless.</p>
+  <p class="mb-6 text-neutral-700 leading-relaxed">FreqLens ships with a curated default stop-word list, but language is personal: a legal writer may want to filter "hereinafter," a medical writer "patient." The built-in stop-word editor lets you add or remove words with one click and reset to the default at any time. Your custom list is saved in your browser, so your next analysis uses your rules automatically.</p>
+
+  <h3 class="font-serif text-2xl font-bold mt-8 mb-3">Reading-level stats: ease, grade, and time</h3>
+  <p class="mb-4 text-neutral-700 leading-relaxed">Frequency is about <em>what</em> you say; readability is about <em>who can follow it</em>. Alongside the tables, FreqLens reports three classic reading metrics:</p>
+  <ul class="mb-4 text-neutral-700 leading-relaxed list-disc pl-6 space-y-2">
+    <li><strong>Flesch Reading Ease</strong> (0–100). Higher is easier. Scores of 60–70 suit a general audience; 30–50 reads as academic or technical.</li>
+    <li><strong>Flesch–Kincaid Grade Level.</strong> The US school grade needed to understand the text. Most web content aims for grade 8–10.</li>
+    <li><strong>Estimated reading time</strong>, based on an average adult pace of 200 words per minute — handy for labeling articles ("6 min read").</li>
+  </ul>
+  <p class="mb-6 text-neutral-700 leading-relaxed">Pair these with the frequency report for a full editorial check: if reading ease is low <em>and</em> a jargon term is stuffed, you have both a clarity and a repetition problem to fix.</p>
+
+  <h3 class="font-serif text-2xl font-bold mt-8 mb-3">How to use FreqLens: a 5-step workflow</h3>
+  <ol class="mb-6 text-neutral-700 leading-relaxed list-decimal pl-6 space-y-2">
+    <li><strong>Paste your draft</strong> into the text area on the left. Analysis runs live — there is nothing to submit and no signup.</li>
+    <li><strong>Check the stats strip</strong> for word count, sentence count, reading ease, and grade level at a glance.</li>
+    <li><strong>Read the Words table.</strong> Find your target keyword, note its density, and check its band. Optimal? Move on. Stuffed? Time to edit.</li>
+    <li><strong>Switch to Bigrams and Trigrams</strong> to see which phrases dominate. Promote strong natural phrases into subheadings; dilute overused ones with synonyms.</li>
+    <li><strong>Customize stop words</strong> if domain-specific filler is cluttering your tables, then re-scan the updated report.</li>
+  </ol>
+
+  <h3 class="font-serif text-2xl font-bold mt-8 mb-3">Common keyword density mistakes</h3>
+  <ul class="mb-4 text-neutral-700 leading-relaxed list-disc pl-6 space-y-2">
+    <li><strong>Chasing an exact percentage.</strong> There is no magic number that guarantees rankings. The 1–3% band is a sanity check, not a target to hit precisely.</li>
+    <li><strong>Ignoring variants.</strong> Search engines understand synonyms and plurals. If "running shoes," "runners," and "sneakers" each sit at 1%, your <em>topic</em> density is far higher than any single row suggests.</li>
+    <li><strong>Forgetting short texts.</strong> In a 100-word paragraph, one repeated word hits 3% fast. Bands are most meaningful on texts of a few hundred words or more.</li>
+    <li><strong>Optimizing only for robots.</strong> A paragraph that reads awkwardly to a human will not convert, no matter how perfect its density table looks.</li>
+  </ul>
+  <p class="mb-4 text-neutral-700 leading-relaxed">Used wisely, a <strong>text analyzer tool</strong> like FreqLens is an editor's second pair of eyes: it quantifies what your draft emphasizes, flags repetition you stopped noticing, and gives every keyword a number you can act on. Paste your next draft, glance at the bands, fix what is stuffed, strengthen what is thin — and publish with confidence.</p>
+</article>
+<!-- ARTICLE-END -->
+
+<!-- FAQ-START -->
+<section class="mx-auto max-w-3xl px-4 sm:px-6 pb-12">
+  <h2 class="font-serif text-3xl font-bold mb-6">Frequently asked questions</h2>
+  <div class="space-y-4" id="faqList">
+    <div class="paper-card rounded-xl p-5">
+      <h3 class="font-bold mb-2">What is a good keyword density for SEO?</h3>
+      <p class="text-sm text-neutral-700 leading-relaxed">There is no single magic number, but the widely used guideline is 1–3% for your primary keyword: often enough to establish the topic clearly, but not so often that the text feels forced. FreqLens marks this range as the "Optimal" band. Anything consistently above 3% risks looking like keyword stuffing to both readers and search engines.</p>
+    </div>
+    <div class="paper-card rounded-xl p-5">
+      <h3 class="font-bold mb-2">How is keyword density calculated?</h3>
+      <p class="text-sm text-neutral-700 leading-relaxed">Keyword density = (number of times the term appears ÷ total words in the text) × 100. For example, a keyword used 15 times in a 1,000-word article has a density of 1.5%. FreqLens computes this automatically for every word, bigram, and trigram in your text, using the full raw word count as the denominator — the standard SEO convention.</p>
+    </div>
+    <div class="paper-card rounded-xl p-5">
+      <h3 class="font-bold mb-2">What is the difference between a word counter and a word frequency analyzer?</h3>
+      <p class="text-sm text-neutral-700 leading-relaxed">A word counter tells you how much you wrote — totals like words, characters, and sentences. A word frequency analyzer tells you what you wrote: a ranked breakdown of each word and phrase, how often it appears, and its density percentage. Frequency analysis is what SEO writers and editors use to check keyword usage and spot unconscious repetition.</p>
+    </div>
+    <div class="paper-card rounded-xl p-5">
+      <h3 class="font-bold mb-2">Why do bigrams and trigrams matter for content analysis?</h3>
+      <p class="text-sm text-neutral-700 leading-relaxed">Single words lack context — "content" could mean anything, but the bigram "content marketing" and the trigram "content marketing strategy" reveal real topics. Phrase frequency shows which multi-word ideas dominate your draft, helps you discover natural long-tail phrases for subheadings, and catches phrase-level stuffing that a single-word table would miss.</p>
+    </div>
+    <div class="paper-card rounded-xl p-5">
+      <h3 class="font-bold mb-2">Can keyword stuffing hurt my rankings?</h3>
+      <p class="text-sm text-neutral-700 leading-relaxed">Yes. Repeating a keyword excessively — typically above 3% density, or crammed unnaturally into sentences — is a known spam signal. Search engines may demote pages that do it, and human readers bounce from text that reads robotically. If FreqLens flags your main term as "Stuffed," rewrite with synonyms, pronouns, and varied sentence structure.</p>
+    </div>
+    <div class="paper-card rounded-xl p-5">
+      <h3 class="font-bold mb-2">Is FreqLens free? Do I need to sign up?</h3>
+      <p class="text-sm text-neutral-700 leading-relaxed">FreqLens is completely free with unlimited usage — no account, no signup, no paywall, and no watermark. All analysis happens locally in your browser, so your text is never uploaded to any server. Your custom stop-word list is stored privately in your own browser via localStorage.</p>
+    </div>
+  </div>
+</section>
+<!-- FAQ-END -->
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "What is a good keyword density for SEO?", "acceptedAnswer": {"@type": "Answer", "text": "The widely used guideline is 1–3% for a primary keyword: often enough to establish the topic clearly, but not so often that the text feels forced. Anything consistently above 3% risks looking like keyword stuffing."}},
+    {"@type": "Question", "name": "How is keyword density calculated?", "acceptedAnswer": {"@type": "Answer", "text": "Keyword density = (number of times the term appears ÷ total words in the text) × 100. For example, a keyword used 15 times in a 1,000-word article has a density of 1.5%."}},
+    {"@type": "Question", "name": "What is the difference between a word counter and a word frequency analyzer?", "acceptedAnswer": {"@type": "Answer", "text": "A word counter tells you how much you wrote — totals like words, characters, and sentences. A word frequency analyzer tells you what you wrote: a ranked breakdown of each word and phrase, how often it appears, and its density percentage."}},
+    {"@type": "Question", "name": "Why do bigrams and trigrams matter for content analysis?", "acceptedAnswer": {"@type": "Answer", "text": "Single words lack context, but phrases like 'content marketing strategy' reveal real topics. Phrase frequency shows which multi-word ideas dominate a draft and catches phrase-level stuffing a single-word table would miss."}},
+    {"@type": "Question", "name": "Can keyword stuffing hurt my rankings?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Repeating a keyword excessively — typically above 3% density — is a known spam signal. Search engines may demote such pages, and readers bounce from robotic text."}},
+    {"@type": "Question", "name": "Is FreqLens free? Do I need to sign up?", "acceptedAnswer": {"@type": "Answer", "text": "FreqLens is completely free with unlimited usage — no account, no signup, no paywall, and no watermark. All analysis happens locally in your browser."}}
+  ]
+}
+</script>
+
+<footer class="border-t-2 border-ink mt-4">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 py-6 flex flex-wrap items-center justify-between gap-3 text-sm">
+    <span class="font-serif font-bold">FreqLens</span>
+    <span class="text-neutral-500 text-xs">Free word frequency analyzer &amp; keyword density checker. Your text never leaves your browser.</span>
+    <nav class="text-xs font-semibold"><a href="#top" class="hover:underline mr-4">Home</a><a href="https://fixoraa.tech" class="hover:underline">More Tools</a></nav>
+  </div>
+</footer>
+
+<script id="freqlens-lib">
+/* FreqLens core logic — pure functions, zero DOM. Inlined verbatim into freqlens.html. */
+var FreqLib = (function () {
+  'use strict';
+
+  var DEFAULT_STOPWORDS = [
+    'a', 'an', 'the', 'and', 'or', 'but', 'if', 'then', 'else', 'when',
+    'at', 'by', 'for', 'with', 'about', 'into', 'through', 'during',
+    'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down',
+    'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further',
+    'once', 'here', 'there', 'all', 'any', 'both', 'each', 'few',
+    'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not',
+    'only', 'own', 'same', 'so', 'than', 'too', 'very', 'can',
+    'will', 'just', 'should', 'now', 'is', 'are', 'was', 'were',
+    'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do',
+    'does', 'did', 'doing', 'would', 'could', 'ought', 'am', 'it',
+    'its', 'this', 'that', 'these', 'those', 'i', 'me', 'my',
+    'we', 'our', 'you', 'your', 'he', 'him', 'his', 'she',
+    'her', 'they', 'them', 'their', 'what', 'which', 'who',
+    'whom', 'as', 'of', 's', 't', 'd'
+  ];
+
+  function normWord(w) {
+    return String(w || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  // Lowercase, strip punctuation, drop empty tokens.
+  function tokenize(text) {
+    if (!text) return [];
+    var raw = String(text).toLowerCase().match(/[a-z0-9']+/g) || [];
+    var out = [];
+    for (var i = 0; i < raw.length; i++) {
+      var t = raw[i].replace(/^'+|'+$/g, '');
+      if (t) out.push(t);
+    }
+    return out;
+  }
+
+  function countTokens(tokens) {
+    var m = new Map();
+    for (var i = 0; i < tokens.length; i++) {
+      var t = tokens[i];
+      m.set(t, (m.get(t) || 0) + 1);
+    }
+    return m;
+  }
+
+  function asSet(stopwords) {
+    if (stopwords instanceof Set) return stopwords;
+    return new Set(stopwords || []);
+  }
+
+  function filterCounts(counts, stopwords) {
+    var stop = asSet(stopwords);
+    var out = new Map();
+    counts.forEach(function (c, w) {
+      if (!stop.has(w)) out.set(w, c);
+    });
+    return out;
+  }
+
+  function filterTokens(tokens, stopwords) {
+    var stop = asSet(stopwords);
+    return tokens.filter(function (t) { return !stop.has(t); });
+  }
+
+  // Sorted desc by count, ties alphabetical; capped at n.
+  function topEntries(counts, n) {
+    var arr = [];
+    counts.forEach(function (c, k) { arr.push([k, c]); });
+    arr.sort(function (a, b) {
+      if (b[1] !== a[1]) return b[1] - a[1];
+      return a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0);
+    });
+    return arr.slice(0, Math.max(0, n));
+  }
+
+  function densityPercent(count, totalWords) {
+    if (!totalWords || totalWords <= 0) return 0;
+    return (count / totalWords) * 100;
+  }
+
+  // Safe-density guidance bands (SEO convention): <1% low, 1-3% optimal, >3% stuffed.
+  function densityBand(d) {
+    if (d < 1) return 'low';
+    if (d <= 3) return 'optimal';
+    return 'stuffed';
+  }
+
+  function densityLabel(band) {
+    if (band === 'low') return 'Low';
+    if (band === 'optimal') return 'Optimal';
+    return 'Stuffed';
+  }
+
+  function extractNgrams(tokens, n) {
+    var m = new Map();
+    if (n < 1) return m;
+    for (var i = 0; i + n <= tokens.length; i++) {
+      var g = tokens.slice(i, i + n).join(' ');
+      m.set(g, (m.get(g) || 0) + 1);
+    }
+    return m;
+  }
+
+  function countSentences(text) {
+    if (!text || !String(text).trim()) return 0;
+    var parts = String(text).split(/[.!?…]+/).filter(function (s) {
+      return s.trim().length > 0;
+    });
+    return parts.length > 0 ? parts.length : 1;
+  }
+
+  function countSyllables(word) {
+    word = String(word || '').toLowerCase().replace(/[^a-z]/g, '');
+    if (!word) return 0;
+    if (word.length <= 3) return 1;
+    word = word.replace(/(?:[^laeiouy]e|ed|es)$/, '');
+    word = word.replace(/^y/, '');
+    var m = word.match(/[aeiouy]{1,2}/g);
+    return Math.max(1, m ? m.length : 1);
+  }
+
+  function round1(x) {
+    return Math.round(x * 10) / 10;
+  }
+
+  function readingStats(text, tokens) {
+    var words = tokens.length;
+    var sentences = countSentences(text);
+    var syllables = 0;
+    for (var i = 0; i < tokens.length; i++) syllables += countSyllables(tokens[i]);
+    var ease = 0, grade = 0;
+    if (words > 0 && sentences > 0) {
+      var wps = words / sentences;
+      var spw = syllables / words;
+      ease = 206.835 - 1.015 * wps - 84.6 * spw;
+      grade = 0.39 * wps + 11.8 * spw - 15.59;
+    }
+    return {
+      words: words,
+      sentences: sentences,
+      syllables: syllables,
+      ease: round1(ease),
+      grade: round1(Math.max(0, grade)),
+      minutes: Math.max(1, Math.ceil(words / 200))
+    };
+  }
+
+  function addStopword(list, word) {
+    var w = normWord(word);
+    if (!w) return list.slice();
+    var out = list.slice();
+    if (out.indexOf(w) === -1) out.push(w);
+    return out;
+  }
+
+  function removeStopword(list, word) {
+    var w = normWord(word);
+    return list.filter(function (x) { return x !== w; });
+  }
+
+  // Full pipeline. density denominator = total raw tokens (SEO convention).
+  function analyze(text, stopwords, topN) {
+    var tokens = tokenize(text);
+    var total = tokens.length;
+    var wordCounts = countTokens(tokens);
+    var kept = filterTokens(tokens, stopwords);
+    var keptCounts = countTokens(kept);
+    var bigrams = extractNgrams(kept, 2);
+    var trigrams = extractNgrams(kept, 3);
+    function withDensity(entries) {
+      return entries.map(function (e) {
+        var d = densityPercent(e[1], total);
+        var band = densityBand(d);
+        return { term: e[0], count: e[1], density: round1(d), band: band, label: densityLabel(band) };
+      });
+    }
+    var n = topN || 25;
+    return {
+      totalTokens: total,
+      tokens: tokens,
+      stats: readingStats(text, tokens),
+      uniqueKept: keptCounts.size,
+      words: withDensity(topEntries(keptCounts, n)),
+      bigrams: withDensity(topEntries(bigrams, n)),
+      trigrams: withDensity(topEntries(trigrams, n))
+    };
+  }
+
+  return {
+    DEFAULT_STOPWORDS: DEFAULT_STOPWORDS,
+    normWord: normWord,
+    tokenize: tokenize,
+    countTokens: countTokens,
+    filterCounts: filterCounts,
+    filterTokens: filterTokens,
+    topEntries: topEntries,
+    densityPercent: densityPercent,
+    densityBand: densityBand,
+    densityLabel: densityLabel,
+    extractNgrams: extractNgrams,
+    countSentences: countSentences,
+    countSyllables: countSyllables,
+    readingStats: readingStats,
+    addStopword: addStopword,
+    removeStopword: removeStopword,
+    analyze: analyze
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = FreqLib;
+
+</script>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var input = $('inputText'), body = $('freqBody'), canvas = $('chart'), chartEmpty = $('chartEmpty');
+  var chips = $('stopChips'), stopInput = $('stopInput');
+  var LS_KEY = 'freqlens-stopwords-v1';
+  var activeTab = 'words';
+  var lastResult = null;
+
+  function getStopwords() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+      if (Array.isArray(saved) && saved.length) return saved;
+    } catch (e) {}
+    return FreqLib.DEFAULT_STOPWORDS.slice();
+  }
+  var stopwords = getStopwords();
+  function saveStopwords() { try { localStorage.setItem(LS_KEY, JSON.stringify(stopwords)); } catch (e) {} }
+
+  var SAMPLE = 'Keyword density is one of the oldest ideas in search engine optimization. ' +
+    'Writers who care about keyword density measure how often a keyword appears in a text. ' +
+    'A good keyword density keeps the keyword visible without keyword stuffing. ' +
+    'Keyword stuffing hurts readability, and search engines penalize keyword stuffing. ' +
+    'Instead of keyword stuffing, use natural language and let the keyword density settle in the optimal range.';
+
+  function bandBadge(band, label) {
+    var cls = band === 'optimal' ? 'bg-chartreuse text-ink'
+      : band === 'stuffed' ? 'bg-red-600 text-white' : 'bg-neutral-200 text-neutral-700';
+    return '<span class="inline-block text-[11px] font-bold px-2 py-0.5 rounded-full ' + cls + '">' + label + '</span>';
+  }
+
+  function renderTable(rows) {
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="5" class="px-3 py-8 text-center text-neutral-400">No terms found — try adding text or removing stop-words.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map(function (r, i) {
+      return '<tr class="border-t border-paperline hover:bg-newsprint">' +
+        '<td class="px-3 py-2 text-neutral-500">' + (i + 1) + '</td>' +
+        '<td class="px-3 py-2 font-semibold break-words">' + escapeHtml(r.term) + '</td>' +
+        '<td class="px-3 py-2 text-right tabular-nums">' + r.count + '</td>' +
+        '<td class="px-3 py-2 text-right tabular-nums">' + r.density.toFixed(1) + '%</td>' +
+        '<td class="px-3 py-2 text-right">' + bandBadge(r.band, r.label) + '</td></tr>';
+    }).join('');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function drawChart(rows) {
+    var dpr = window.devicePixelRatio || 1;
+    var w = canvas.clientWidth || canvas.parentElement.clientWidth;
+    var h = 220;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    canvas.style.height = h + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+    var top = rows.slice(0, 10);
+    if (!top.length) { canvas.style.display = 'none'; chartEmpty.style.display = 'block'; return; }
+    canvas.style.display = 'block'; chartEmpty.style.display = 'none';
+    var max = top[0].count;
+    var labelW = 110, rowH = (h - 10) / top.length, barH = Math.min(14, rowH - 8);
+    ctx.font = '11px system-ui, sans-serif';
+    top.forEach(function (r, i) {
+      var y = 5 + i * rowH + (rowH - barH) / 2;
+      var bw = max ? (w - labelW - 46) * (r.count / max) : 0;
+      ctx.fillStyle = '#1A1A1A';
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      var label = r.term.length > 16 ? r.term.slice(0, 15) + '…' : r.term;
+      ctx.fillText(label, labelW - 8, y + barH / 2);
+      ctx.fillStyle = '#84CC16';
+      roundRect(ctx, labelW, y, Math.max(2, bw), barH, 4); ctx.fill();
+      ctx.fillStyle = '#1A1A1A'; ctx.textAlign = 'left';
+      ctx.fillText(r.count + '  ·  ' + r.density.toFixed(1) + '%', labelW + bw + 6, y + barH / 2);
+    });
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function renderChips() {
+    chips.innerHTML = stopwords.map(function (w) {
+      return '<span class="inline-flex items-center gap-1 text-xs bg-ink text-newsprint rounded-full pl-3 pr-1.5 py-1">' +
+        escapeHtml(w) +
+        '<button data-rm="' + escapeHtml(w) + '" class="w-5 h-5 rounded-full hover:bg-chartreuse hover:text-ink font-bold" aria-label="Remove ' + escapeHtml(w) + '">×</button></span>';
+    }).join('');
+  }
+
+  function analyze() {
+    var text = input.value;
+    var res = FreqLib.analyze(text, stopwords, 25);
+    lastResult = res;
+    var s = res.stats;
+    $('stWords').textContent = s.words;
+    $('stUnique').textContent = res.uniqueKept;
+    $('stSent').textContent = s.sentences;
+    $('stEase').textContent = s.words ? s.ease : '–';
+    $('stGrade').textContent = s.words ? s.grade : '–';
+    $('stTime').textContent = s.words ? s.minutes + ' min' : '–';
+    renderTable(res[activeTab]);
+    drawChart(res.words);
+  }
+
+  var debounce = null;
+  input.addEventListener('input', function () {
+    clearTimeout(debounce);
+    debounce = setTimeout(analyze, 250);
+  });
+
+  document.querySelectorAll('.tabbtn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tabbtn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      activeTab = btn.getAttribute('data-tab');
+      if (lastResult) renderTable(lastResult[activeTab]);
+    });
+  });
+
+  $('btnSample').addEventListener('click', function () { input.value = SAMPLE; analyze(); });
+  $('btnClear').addEventListener('click', function () { input.value = ''; analyze(); input.focus(); });
+
+  function addStop() {
+    var w = FreqLib.normWord(stopInput.value);
+    if (!w) return;
+    var next = FreqLib.addStopword(stopwords, w);
+    if (next.length !== stopwords.length) { stopwords = next; saveStopwords(); renderChips(); analyze(); }
+    stopInput.value = '';
+    stopInput.focus();
+  }
+  $('btnAddStop').addEventListener('click', addStop);
+  stopInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') addStop(); });
+  chips.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-rm]');
+    if (!b) return;
+    stopwords = FreqLib.removeStopword(stopwords, b.getAttribute('data-rm'));
+    saveStopwords(); renderChips(); analyze();
+  });
+  $('btnResetStop').addEventListener('click', function () {
+    stopwords = FreqLib.DEFAULT_STOPWORDS.slice();
+    saveStopwords(); renderChips(); analyze();
+  });
+
+  window.addEventListener('resize', function () { if (lastResult) drawChart(lastResult.words); });
+
+  renderChips();
+  analyze();
+})();
+</script>
+</body>
+</html>
